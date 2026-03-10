@@ -38,18 +38,20 @@ function ProductListingJsonLd() {
   );
 }
 
-export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+export default async function ProductsPage({
+  searchParams,
+}: ProductsPageProps) {
   const sort =
     searchParams.sort === "desc"
       ? "desc"
       : searchParams.sort === "asc"
-      ? "asc"
-      : undefined;
+        ? "asc"
+        : undefined;
 
   try {
     // Server-side fetch
     const [productsResult, categoriesResult] = await Promise.all([
-      fetchProducts(sort),
+      fetchProducts(sort), // sorted client-side
       fetchCategories(),
     ]);
 
