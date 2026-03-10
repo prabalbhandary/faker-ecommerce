@@ -88,10 +88,10 @@ export async function fetchProducts(
   return apiFetch<Product[]>("/products", { params });
 }
 
-export async function fetchProductById(
-  id: number,
-): Promise<ApiResponse<Product>> {
-  return apiFetch<Product>(`/products/${id}`);
+export async function fetchProductById(id: number) {
+  const result = await apiFetch<Product>(`/products/${id}`);
+  console.log("fetchProductById result:", result);
+  return result;
 }
 
 export async function fetchCategories(): Promise<ApiResponse<string[]>> {
