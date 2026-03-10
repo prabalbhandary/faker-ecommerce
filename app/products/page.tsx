@@ -3,14 +3,14 @@ import { fetchProducts, fetchCategories } from "@/utils/api";
 import { META } from "@/utils/constants";
 import ProductsClient from "./ProductsClient";
 
-interface ProductsPageProps {
-  searchParams: {
+type ProductsPageProps = {
+  searchParams: Promise<{
     sort?: string;
     category?: string;
     search?: string;
     page?: string;
-  };
-}
+  }>;
+};
 
 export const metadata: Metadata = {
   title: `Products | ${META.SITE_NAME}`,
@@ -31,22 +31,24 @@ function ProductListingJsonLd() {
           "@type": "ItemList",
           name: "Product Listing",
           description: META.DESCRIPTION,
-          url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/products`,
+          url: `${
+            process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+          }/products`,
         }),
       }}
     />
   );
 }
 
-export default async function ProductsPage({
-  searchParams,
-}: ProductsPageProps) {
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const params = await searchParams;
+
   const sort =
-    searchParams.sort === "desc"
+    params.sort === "desc"
       ? "desc"
-      : searchParams.sort === "asc"
-        ? "asc"
-        : undefined;
+      : params.sort === "asc"
+      ? "asc"
+      : undefined;
 
   const [productsResult, categoriesResult] = await Promise.all([
     fetchProducts(sort),
@@ -60,14 +62,15 @@ export default async function ProductsPage({
   return (
     <>
       <ProductListingJsonLd />
+
       <ProductsClient
         initialProducts={products}
         categories={categories}
         fetchError={fetchError}
-        initialSearch={searchParams.search ?? ""}
-        initialCategory={searchParams.category ?? ""}
+        initialSearch={params.search ?? ""}
+        initialCategory={params.category ?? ""}
         initialSort={sort ?? ""}
-        initialPage={Number(searchParams.page ?? 1)}
+        initialPage={Number(params.page ?? 1)}
       />
     </>
   );
