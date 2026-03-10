@@ -41,7 +41,8 @@ export default function ProductsClient({
         if (category) {
           result = await fetchProductByCategory(category, sort as "asc" | "desc");
         } else {
-          result = await fetchProducts(sort as "asc" | "desc");
+          // result = await fetchProducts(sort as "asc" | "desc");
+          result = await fetchProducts();
         }
 
         if (result.error) setError(result.error);

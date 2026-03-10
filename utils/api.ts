@@ -28,18 +28,27 @@ async function apiFetch<T>(endpoint: string, options: FetchOptions = {}): Promis
     return { data: null, error: "Something went wrong. Please try again." };
   }
 }
-
-// Product API
-export async function fetchProducts(sort?: "asc" | "desc"): Promise<ApiResponse<Product[]>> {
-  const params: Record<string, string> = {};
-  if (sort) params.sort = sort;
-  return apiFetch<Product[]>("/products", { params });
-}
-
 export async function fetchProductById(id: number): Promise<ApiResponse<Product>> {
-  return apiFetch<Product>(`/products/${id}`);
+  try {
+    const res = await fetch(`${API_BASE_URL}/products/${id}`);
+    if (!res.ok) return { data: null, error: ERROR_MESSAGES.PRODUCT_NOT_FOUND };
+    const data = (await res.json()) as Product;
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: ERROR_MESSAGES.FETCH_FAILED };
+  }
 }
 
+export async function fetchProducts(): Promise<ApiResponse<Product[]>> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/products`);
+    if (!res.ok) return { data: null, error: ERROR_MESSAGES.FETCH_FAILED };
+    const data = (await res.json()) as Product[];
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: ERROR_MESSAGES.FETCH_FAILED };
+  }
+}
 export async function fetchCategories(): Promise<ApiResponse<string[]>> {
   return apiFetch<string[]>("/products/categories");
 }
