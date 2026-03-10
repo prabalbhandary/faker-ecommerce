@@ -9,15 +9,19 @@ import { formatPrice, formatCategory } from '@/utils/formatters';
 import ProductRating from '../components/ProductRating';
 import AddToCartButton from './AddToCartButton';
 
-interface ProductPageProps {
-  params: { id: string };
-}
+type ProductPageProps = {
+  params: Promise<{ id: string }>;
+};
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  const { data: product } = await fetchProductById(Number(params.id));
+  const { id } = await params;
+
+  const { data: product } = await fetchProductById(Number(id));
 
   if (!product) {
-    return { title: `Product Not Found | ${META.SITE_NAME}` };
+    return {
+      title: `Product Not Found | ${META.SITE_NAME}`,
+    };
   }
 
   return {
@@ -26,17 +30,31 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     openGraph: {
       title: product.title,
       description: product.description.slice(0, 160),
-      images: [{ url: product.image, width: 600, height: 600, alt: product.title }],
+      images: [
+        {
+          url: product.image,
+          width: 600,
+          height: 600,
+          alt: product.title,
+        },
+      ],
     },
   };
 }
 
 export async function generateStaticParams() {
   const { data: products } = await fetchProducts();
-  return (products ?? []).map((p) => ({ id: String(p.id) }));
+
+  return (products ?? []).map((p) => ({
+    id: String(p.id),
+  }));
 }
 
-function ProductJsonLd({ product }: { product: NonNullable<Awaited<ReturnType<typeof fetchProductById>>['data']> }) {
+function ProductJsonLd({
+  product,
+}: {
+  product: NonNullable<Awaited<ReturnType<typeof fetchProductById>>['data']>;
+}) {
   return (
     <script
       type="application/ld+json"
@@ -66,11 +84,12 @@ function ProductJsonLd({ product }: { product: NonNullable<Awaited<ReturnType<ty
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const id = Number(params.id);
+  const { id } = await params;
+  const numericId = Number(id);
 
-  if (isNaN(id)) notFound();
+  if (isNaN(numericId)) notFound();
 
-  const { data: product, error } = await fetchProductById(id);
+  const { data: product, error } = await fetchProductById(numericId);
 
   if (error && !product) {
     return (
@@ -78,8 +97,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
           <AlertTriangle size={24} className="text-red-500" />
         </div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Product Not Found</h2>
+
+        <h2 className="text-xl font-bold text-gray-900 mb-2">
+          Product Not Found
+        </h2>
+
         <p className="text-sm text-gray-500 mb-6">{error}</p>
+
         <Link
           href={ROUTES.PRODUCTS}
           className="inline-flex items-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors"
@@ -97,12 +121,31 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <>
       <ProductJsonLd product={product} />
 
-      <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8" aria-label="Breadcrumb">
-        <Link href={ROUTES.HOME} className="hover:text-gray-900 transition-colors">Home</Link>
+      <nav
+        className="flex items-center gap-2 text-sm text-gray-500 mb-8"
+        aria-label="Breadcrumb"
+      >
+        <Link
+          href={ROUTES.HOME}
+          className="hover:text-gray-900 transition-colors"
+        >
+          Home
+        </Link>
+
         <span>/</span>
-        <Link href={ROUTES.PRODUCTS} className="hover:text-gray-900 transition-colors">Products</Link>
+
+        <Link
+          href={ROUTES.PRODUCTS}
+          className="hover:text-gray-900 transition-colors"
+        >
+          Products
+        </Link>
+
         <span>/</span>
-        <span className="text-gray-900 font-medium truncate max-w-50">{product.title}</span>
+
+        <span className="text-gray-900 font-medium truncate max-w-50">
+          {product.title}
+        </span>
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -141,8 +184,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <div className="border-t border-gray-100 my-5" />
 
           <div className="mb-8">
-            <h2 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">Description</h2>
-            <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
+            <h2 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">
+              Description
+            </h2>
+
+            <p className="text-sm text-gray-600 leading-relaxed">
+              {product.description}
+            </p>
           </div>
 
           <AddToCartButton product={product} />
