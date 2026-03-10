@@ -1,36 +1,39 @@
-import Link from 'next/link';
-import { ArrowRight, ShoppingBag, Shield, Truck, Star } from 'lucide-react';
-import { fetchProducts } from '@/utils/api';
-import { ROUTES } from '@/utils/constants';
-import { formatPrice } from '@/utils/formatters';
-import Image from 'next/image';
+"use client";
+
+import Link from "next/link";
+import { ArrowRight, ShoppingBag, Shield, Truck, Star } from "lucide-react";
+import { fetchProducts } from "@/utils/api";
+import { ROUTES } from "@/utils/constants";
+import { formatPrice } from "@/utils/formatters";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { Product } from "@/utils/types";
 
 const FEATURES = [
-  {
-    icon: Truck,
-    title: 'Free Shipping',
-    desc: 'On orders over $50',
-  },
-  {
-    icon: Shield,
-    title: 'Secure Payment',
-    desc: '100% protected checkout',
-  },
-  {
-    icon: Star,
-    title: 'Top Rated',
-    desc: 'Thousands of 5-star reviews',
-  },
-  {
-    icon: ShoppingBag,
-    title: 'Easy Returns',
-    desc: '30-day hassle-free returns',
-  },
+  { icon: Truck, title: "Free Shipping", desc: "On orders over $50" },
+  { icon: Shield, title: "Secure Payment", desc: "100% protected checkout" },
+  { icon: Star, title: "Top Rated", desc: "Thousands of 5-star reviews" },
+  { icon: ShoppingBag, title: "Easy Returns", desc: "30-day hassle-free returns" },
 ];
 
-export default async function HomePage() {
-  const { data: products } = await fetchProducts();
-  const featured = (products ?? []).slice(0, 4);
+export default function HomePage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadProducts() {
+      setLoading(true);
+      try {
+        const { data } = await fetchProducts();
+        setProducts((data ?? []).slice(0, 4)); // Take first 4 for featured
+      } catch {
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadProducts();
+  }, []);
 
   return (
     <div className="space-y-16">
@@ -73,7 +76,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Featured products (SSR) */}
+      {/* Featured products */}
       <section>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-black text-gray-900">Featured Products</h2>
@@ -86,31 +89,37 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-          {featured.map((product) => (
-            <Link
-              key={product.id}
-              href={ROUTES.PRODUCTS_DETAILS(product.id)}
-              className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200"
-            >
-              <div className="relative h-44 bg-gray-50">
-                <Image
-                  src={product.image}
-                  alt={product.title}
-                  fill
-                  sizes="(max-width: 640px) 50vw, 25vw"
-                  className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <div className="p-4">
-                <p className="text-xs text-gray-900 font-semibold line-clamp-2 mb-1.5 leading-snug">
-                  {product.title}
-                </p>
-                <p className="text-base font-black text-gray-900">{formatPrice(product.price)}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
+        {loading ? (
+          <p>Loading featured products...</p>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+            {products.map((product) => (
+              <Link
+                key={product.id}
+                href={ROUTES.PRODUCTS_DETAILS(product.id)}
+                className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200"
+              >
+                <div className="relative h-44 bg-gray-50">
+                  <Image
+                    src={product.image}
+                    alt={product.title}
+                    fill
+                    sizes="(max-width: 640px) 50vw, 25vw"
+                    className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div className="p-4">
+                  <p className="text-xs text-gray-900 font-semibold line-clamp-2 mb-1.5 leading-snug">
+                    {product.title}
+                  </p>
+                  <p className="text-base font-black text-gray-900">
+                    {formatPrice(product.price)}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
