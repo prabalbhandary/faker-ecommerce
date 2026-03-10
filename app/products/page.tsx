@@ -4,12 +4,12 @@ import { META } from "@/utils/constants";
 import ProductsClient from "./ProductsClient";
 
 type ProductsPageProps = {
-  searchParams: Promise<{
+  searchParams: {
     sort?: string;
     category?: string;
     search?: string;
     page?: string;
-  }>;
+  };
 };
 
 export const metadata: Metadata = {
@@ -31,9 +31,7 @@ function ProductListingJsonLd() {
           "@type": "ItemList",
           name: "Product Listing",
           description: META.DESCRIPTION,
-          url: `${
-            process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
-          }/products`,
+          url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/products`,
         }),
       }}
     />
@@ -41,7 +39,7 @@ function ProductListingJsonLd() {
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const params = await searchParams;
+  const params = searchParams;
 
   const sort =
     params.sort === "desc"
