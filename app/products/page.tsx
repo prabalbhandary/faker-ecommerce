@@ -1,7 +1,7 @@
 import { Metadata } from "next";
-import { fetchProducts, fetchCategories } from "@/utils/api";
-import { META } from "@/utils/constants";
 import ProductsClient from "./ProductsClient";
+import { fetchProducts, fetchCategories } from "@/utils/api";
+import { META, PRODUCTS_PER_PAGE } from "@/utils/constants";
 
 type ProductsPageProps = {
   searchParams: {
@@ -39,37 +39,44 @@ function ProductListingJsonLd() {
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const params = searchParams;
-
   const sort =
-    params.sort === "desc"
+    searchParams.sort === "desc"
       ? "desc"
-      : params.sort === "asc"
+      : searchParams.sort === "asc"
       ? "asc"
       : undefined;
 
-  const [productsResult, categoriesResult] = await Promise.all([
-    fetchProducts(sort),
-    fetchCategories(),
-  ]);
+  try {
+    // Server-side fetch
+    const [productsResult, categoriesResult] = await Promise.all([
+      fetchProducts(sort),
+      fetchCategories(),
+    ]);
 
-  const products = productsResult.data ?? [];
-  const categories = categoriesResult.data ?? [];
-  const fetchError = productsResult.error;
+    const products = productsResult.data ?? [];
+    const categories = categoriesResult.data ?? [];
+    const fetchError = productsResult.error;
 
-  return (
-    <>
-      <ProductListingJsonLd />
-
-      <ProductsClient
-        initialProducts={products}
-        categories={categories}
-        fetchError={fetchError}
-        initialSearch={params.search ?? ""}
-        initialCategory={params.category ?? ""}
-        initialSort={sort ?? ""}
-        initialPage={Number(params.page ?? 1)}
-      />
-    </>
-  );
+    return (
+      <>
+        <ProductListingJsonLd />
+        <ProductsClient
+          initialProducts={products}
+          categories={categories}
+          fetchError={fetchError}
+          initialSearch={searchParams.search ?? ""}
+          initialCategory={searchParams.category ?? ""}
+          initialSort={sort ?? ""}
+          initialPage={Number(searchParams.page ?? 1)}
+          productsPerPage={PRODUCTS_PER_PAGE}
+        />
+      </>
+    );
+  } catch (err) {
+    return (
+      <div className="text-center mt-10 text-red-600">
+        Failed to load products. Please try again later.
+      </div>
+    );
+  }
 }
