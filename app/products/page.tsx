@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import ProductsClient from "./ProductsClient";
-import { fetchProducts, fetchCategories } from "@/utils/api";
+import { fetchCategories } from "@/utils/api";
 import { META, PRODUCTS_PER_PAGE } from "@/utils/constants";
 
 type ProductsPageProps = {
@@ -14,7 +14,7 @@ type ProductsPageProps = {
 
 export const metadata: Metadata = {
   title: `Products | ${META.SITE_NAME}`,
-  description: "Browse our full collection of products at unbeatable prices.",
+  description: META.DESCRIPTION,
   openGraph: {
     title: `Products | ${META.SITE_NAME}`,
     description: META.DESCRIPTION,
@@ -38,47 +38,28 @@ function ProductListingJsonLd() {
   );
 }
 
-export default async function ProductsPage({
-  searchParams,
-}: ProductsPageProps) {
-  const sort =
-    searchParams.sort === "desc"
-      ? "desc"
-      : searchParams.sort === "asc"
-        ? "asc"
-        : undefined;
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  // Fetch categories server-side
+  const categoriesResult = await fetchCategories();
+  const categories = categoriesResult.data ?? [];
 
-  try {
-    // Server-side fetch
-    const [productsResult, categoriesResult] = await Promise.all([
-      fetchProducts(sort), // sorted client-side
-      fetchCategories(),
-    ]);
-
-    const products = productsResult.data ?? [];
-    const categories = categoriesResult.data ?? [];
-    const fetchError = productsResult.error;
-
-    return (
-      <>
-        <ProductListingJsonLd />
-        <ProductsClient
-          initialProducts={products}
-          categories={categories}
-          fetchError={fetchError}
-          initialSearch={searchParams.search ?? ""}
-          initialCategory={searchParams.category ?? ""}
-          initialSort={sort ?? ""}
-          initialPage={Number(searchParams.page ?? 1)}
-          productsPerPage={PRODUCTS_PER_PAGE}
-        />
-      </>
-    );
-  } catch (err) {
-    return (
-      <div className="text-center mt-10 text-red-600">
-        Failed to load products. Please try again later.
-      </div>
-    );
-  }
+  return (
+    <>
+      <ProductListingJsonLd />
+      <ProductsClient
+        categories={categories}
+        initialSearch={searchParams.search ?? ""}
+        initialCategory={searchParams.category ?? ""}
+        initialSort={
+          searchParams.sort === "desc"
+            ? "desc"
+            : searchParams.sort === "asc"
+            ? "asc"
+            : ""
+        }
+        initialPage={Number(searchParams.page ?? 1)}
+        productsPerPage={PRODUCTS_PER_PAGE}
+      />
+    </>
+  );
 }
