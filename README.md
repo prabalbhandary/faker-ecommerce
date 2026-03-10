@@ -117,3 +117,13 @@ All HTTP calls go through the `apiFetch` wrapper in `utils/api.ts`. It handles:
 - Consistent `{ data, error }` response shape
 
 This pattern makes the API layer easy to extend (logging, retry logic, request caching) without changing call sites.
+
+
+
+
+
+
+
+## URLs
+- GitHub Repo: https://github.com/prabalbhandary/faker-ecommerce
+- Webiste URL: https://faker-ecommerce-ygbr.vercel.app/

@@ -1,0 +1,2 @@
+GitHub Repo: https://github.com/prabalbhandary/faker-ecommerce
+Webiste URL: https://faker-ecommerce-ygbr.vercel.app/
