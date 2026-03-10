@@ -1,50 +1,31 @@
 import { API_BASE_URL, ERROR_MESSAGES } from "./constants";
 import { ApiResponse, FetchOptions, Product, LoginResponse } from "./types";
 
-async function apiFetch<T>(
-  endpoint: string,
-  options: FetchOptions = {}
-): Promise<ApiResponse<T>> {
+async function apiFetch<T>(endpoint: string, options: FetchOptions = {}): Promise<ApiResponse<T>> {
   const { params, ...fetchOptions } = options;
-
-  // Build full URL
   let url = `${API_BASE_URL}${endpoint}`;
   if (params && Object.keys(params).length > 0) {
-    const queryString = new URLSearchParams(params).toString();
-    url = `${url}?${queryString}`;
-  }
-
-  const headers: HeadersInit = { "Content-Type": "application/json" };
-
-  // Add auth token if in browser
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("ecommerce_auth");
-    if (stored) {
-      try {
-        const auth = JSON.parse(stored);
-        if (auth?.token) headers["Authorization"] = `Bearer ${auth.token}`;
-      } catch (err) {
-        console.error("Auth parse error:", err);
-      }
-    }
+    url += `?${new URLSearchParams(params).toString()}`;
   }
 
   try {
-    const res = await fetch(url, { ...fetchOptions, headers });
+    const res = await fetch(url, {
+      ...fetchOptions,
+      headers: { "Content-Type": "application/json", ...fetchOptions.headers },
+    });
 
     if (!res.ok) {
-      const status = res.status;
-      if (status === 404) return { data: null, error: ERROR_MESSAGES.PRODUCT_NOT_FOUND };
-      if (status === 401) return { data: null, error: ERROR_MESSAGES.LOGIN_FAILED };
-      if (status >= 500) return { data: null, error: ERROR_MESSAGES.FETCH_FAILED };
-      return { data: null, error: ERROR_MESSAGES.GENERIC };
+      console.error("Fetch error:", res.status, await res.text());
+      if (res.status === 404) return { data: null, error: "Product not found." };
+      return { data: null, error: "Something went wrong. Please try again." };
     }
 
     const data = (await res.json()) as T;
+    console.log("Fetch success:", url, data);
     return { data, error: null };
   } catch (err) {
-    console.error("API fetch error:", err);
-    return { data: null, error: ERROR_MESSAGES.NETWORK_ERROR };
+    console.error("Network error:", err);
+    return { data: null, error: "Something went wrong. Please try again." };
   }
 }
 
